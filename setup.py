@@ -11,7 +11,8 @@ setuptools.setup(
     classifiers=['Framework :: Jupyter'],
     install_requires=[
         'jupyter-server-proxy>=3.2.3,!=4.0.0,!=4.1.0',
-        'mlflow>=2.8.0'
+        'mlflow>=2.8.0',
+        'gunicorn>=20.1.0'
     ],
     entry_points={
         'jupyter_serverproxy_servers': [
