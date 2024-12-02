@@ -2,8 +2,6 @@ import os
 import shutil
 import getpass
 from pathlib import Path
-import sys
-import subprocess
 
 def get_mlflow_executable():
     """Find mlflow executable in known locations"""
@@ -22,25 +20,13 @@ def setup_mlflow():
     """Set up and return MLflow UI process configuration"""
     def _get_env(port):
         """Get environment variables for MLflow"""
-        # Get the Python executable path
-        python_path = sys.executable
-        
-        # Get MLflow package location
-        mlflow_location = subprocess.check_output(
-            [python_path, '-c', 'import mlflow; print(mlflow.__file__)'],
-            text=True
-        ).strip()
-        mlflow_package_dir = os.path.dirname(mlflow_location)
-        
         return {
             'MLFLOW_TRACKING_URI': f'http://localhost:{port}',
-            'USER': os.getenv('NB_USER', getpass.getuser()),
-            'PYTHONPATH': mlflow_package_dir,
-            'MLFLOW_STATIC_PREFIX': '/mlflow'
+            'USER': os.getenv('NB_USER', getpass.getuser())
         }
 
     def _get_cmd(port):
-        """Get the MLflow UI command with gunicorn"""
+        """Get the MLflow UI command"""
         # Create a default directory for MLflow artifacts and database
         mlflow_dir = os.path.expanduser('~/mlflow-data')
         artifact_path = os.path.join(mlflow_dir, 'artifacts')
@@ -48,20 +34,14 @@ def setup_mlflow():
         
         # Create directories if they don't exist
         Path(artifact_path).mkdir(parents=True, exist_ok=True)
-        
-        # Get the Python executable path
-        python_path = sys.executable
 
+        # Use mlflow ui command directly
         cmd = [
-            'gunicorn',
-            '--bind', f'127.0.0.1:{port}',
-            '--timeout', '120',
-            '--workers', '4',
-            '--worker-class', 'sync',
-            f'mlflow.server:app',
-            '--env', f'BACKEND_STORE_URI=sqlite:///{db_path}',
-            '--env', f'ARTIFACT_ROOT={artifact_path}',
-            '--env', 'SERVE_ARTIFACTS=true'
+            get_mlflow_executable(),
+            'ui',
+            '--host', '127.0.0.1',
+            '--port', str(port),
+            '--backend-store-uri', f'sqlite:///{db_path}'
         ]
         return cmd
 
