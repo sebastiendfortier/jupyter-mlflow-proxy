@@ -17,7 +17,7 @@ def get_icon_path():
     )
 
 def setup_mlflow():
-    """Set up and return MLflow server process configuration"""
+    """Set up and return MLflow UI process configuration"""
     def _get_env(port):
         """Get environment variables for MLflow"""
         return {
@@ -26,23 +26,22 @@ def setup_mlflow():
         }
 
     def _get_cmd(port):
-        """Get the MLflow server command"""
+        """Get the MLflow UI command"""
         # Create a default directory for MLflow artifacts if it doesn't exist
         artifact_path = os.path.expanduser('~/mlflow-artifacts')
         Path(artifact_path).mkdir(parents=True, exist_ok=True)
 
         cmd = [
             get_mlflow_executable(),
-            'server',
+            'ui',
             '--host=127.0.0.1',
             f'--port={port}',
-            f'--default-artifact-root={artifact_path}',
-            '--serve-artifacts'
+            f'--backend-store-uri={artifact_path}'
         ]
         return cmd
 
     def _get_timeout(default=120):
-        """Get server timeout in seconds"""
+        """Get UI timeout in seconds"""
         try:
             return float(os.getenv('MLFLOW_TIMEOUT', default))
         except Exception:
