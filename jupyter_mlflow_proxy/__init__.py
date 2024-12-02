@@ -1,14 +1,5 @@
 import os
 import shutil
-import getpass
-from pathlib import Path
-
-def get_mlflow_executable():
-    """Find mlflow executable in known locations"""
-    if shutil.which('mlflow'):
-        return 'mlflow'
-    
-    raise FileNotFoundError('Could not find mlflow in PATH')
 
 def get_icon_path():
     """Get the path to the MLflow icon"""
@@ -18,47 +9,24 @@ def get_icon_path():
 
 def setup_mlflow():
     """Set up and return MLflow UI process configuration"""
-    def _get_env(port):
-        """Get environment variables for MLflow"""
-        return {
-            'MLFLOW_TRACKING_URI': f'http://localhost:{port}',
-            'USER': os.getenv('NB_USER', getpass.getuser())
-        }
-
     def _get_cmd(port):
         """Get the MLflow UI command"""
-        # Create a default directory for MLflow artifacts and database
-        mlflow_dir = os.path.expanduser('~/mlflow-data')
-        artifact_path = os.path.join(mlflow_dir, 'artifacts')
-        db_path = os.path.join(mlflow_dir, 'mlflow.db')
-        
-        # Create directories if they don't exist
-        Path(artifact_path).mkdir(parents=True, exist_ok=True)
+        # Find mlflow executable in the current environment
+        mlflow_path = shutil.which('mlflow')
+        if not mlflow_path:
+            raise FileNotFoundError('Could not find mlflow in PATH')
 
-        # Use mlflow ui command directly
-        cmd = [
-            get_mlflow_executable(),
+        return [
+            mlflow_path,
             'ui',
-            '--host', '127.0.0.1',
-            '--port', str(port),
-            '--backend-store-uri', f'sqlite:///{db_path}'
+            '--port', str(port)
         ]
-        return cmd
 
-    def _get_timeout(default=120):
-        """Get server timeout in seconds"""
-        try:
-            return float(os.getenv('MLFLOW_TIMEOUT', default))
-        except Exception:
-            return default
-
-    server_process = {
+    return {
         'command': _get_cmd,
-        'timeout': _get_timeout(),
-        'environment': _get_env,
+        'absolute_url': False,
         'launcher_entry': {
             'title': 'MLflow',
             'icon_path': get_icon_path()
         }
-    }
-    return server_process 
+    } 
