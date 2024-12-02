@@ -27,21 +27,27 @@ def setup_mlflow():
 
     def _get_cmd(port):
         """Get the MLflow UI command"""
-        # Create a default directory for MLflow artifacts if it doesn't exist
-        artifact_path = os.path.expanduser('~/mlflow-artifacts')
+        # Create a default directory for MLflow artifacts and database
+        mlflow_dir = os.path.expanduser('~/mlflow-data')
+        artifact_path = os.path.join(mlflow_dir, 'artifacts')
+        db_path = os.path.join(mlflow_dir, 'mlflow.db')
+        
+        # Create directories if they don't exist
         Path(artifact_path).mkdir(parents=True, exist_ok=True)
 
         cmd = [
             get_mlflow_executable(),
-            'ui',
+            'server',
             '--host=127.0.0.1',
             f'--port={port}',
-            f'--backend-store-uri={artifact_path}'
+            f'--backend-store-uri=sqlite:///{db_path}',
+            f'--default-artifact-root={artifact_path}',
+            '--serve-artifacts'
         ]
         return cmd
 
     def _get_timeout(default=120):
-        """Get UI timeout in seconds"""
+        """Get server timeout in seconds"""
         try:
             return float(os.getenv('MLFLOW_TIMEOUT', default))
         except Exception:
