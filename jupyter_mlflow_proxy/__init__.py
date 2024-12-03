@@ -16,10 +16,13 @@ def setup_mlflow():
         if not mlflow_path:
             raise FileNotFoundError('Could not find mlflow in PATH')
 
+        print(f"MLflow server running on http://localhost:{port}")
+        
         return [
             mlflow_path,
             'ui',
-            '--port', str(port)
+            '--port', str(port),
+            '--host', '0.0.0.0'
         ]
 
     return {
