@@ -1,3 +1,4 @@
+from IPython.display import display, Javascript
 import os
 import shutil
 
@@ -16,7 +17,12 @@ def setup_mlflow():
         if not mlflow_path:
             raise FileNotFoundError('Could not find mlflow in PATH')
 
-        print(f"MLflow server running on http://localhost:{port}")
+        message = f"MLflow server running on http://localhost:{port}"
+        print(message)
+        
+        # Display popup message
+        js_code = f"alert('{message}');"
+        display(Javascript(js_code))
         
         return [
             mlflow_path,
