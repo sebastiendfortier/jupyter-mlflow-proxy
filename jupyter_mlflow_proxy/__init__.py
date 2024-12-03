@@ -20,10 +20,6 @@ def setup_mlflow():
         message = f"MLflow server running on http://localhost:{port}"
         print(message)
         
-        # Display popup message
-        js_code = f"alert('{message}');"
-        display(Javascript(js_code))
-        
         return [
             mlflow_path,
             'ui',
@@ -36,7 +32,8 @@ def setup_mlflow():
         'absolute_url': False,
         'launcher_entry': {
             'title': 'MLflow',
-            'icon_path': get_icon_path()
+            'icon_path': get_icon_path(),
+            'notification': 'MLflow server is starting...'
         },
         'timeout': 90,           # Timeout in seconds
         'new_browser_tab': True  # Opens in a new tab
