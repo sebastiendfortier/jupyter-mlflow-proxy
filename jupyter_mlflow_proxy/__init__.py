@@ -1,6 +1,11 @@
 import os
 import shutil
 from jupyter_server.serverapp import ServerApp
+from traitlets import Unicode
+from traitlets.config import LoggingConfigurable
+
+class MLflowConfig(LoggingConfigurable):
+    server_url = Unicode('', help='MLflow server URL').tag(config=True)
 
 def get_icon_path():
     """Get the path to the MLflow icon"""
@@ -10,6 +15,8 @@ def get_icon_path():
 
 def setup_mlflow():
     """Set up and return MLflow UI process configuration"""
+    mlflow_config = MLflowConfig()
+    
     def _get_cmd(port):
         """Get the MLflow UI command"""
         # Find mlflow executable in the current environment
@@ -17,19 +24,23 @@ def setup_mlflow():
         if not mlflow_path:
             raise FileNotFoundError('Could not find mlflow in PATH')
 
-        message = f"MLflow server running on http://localhost:{port}"
+        server_url = f"http://localhost:{port}"
+        message = f"MLflow server running on {server_url}"
         print(message)
         
-        # Set environment variable for JupyterLab
-        os.environ['MLFLOW_SERVER_URL'] = f"http://localhost:{port}"
+        # Store URL in multiple places for accessibility
+        os.environ['MLFLOW_SERVER_URL'] = server_url
+        mlflow_config.server_url = server_url
         
         # If running in a Jupyter context, set server config
         try:
             server_app = ServerApp.instance()
             if server_app:
-                server_app.config.MLflowServerURL = f"http://localhost:{port}"
-        except:
-            pass
+                server_app.config.MLflowConfig.server_url = server_url
+                print(f"Server app config: {server_app.config}")
+                print(f"Config location: {server_app.config_file_paths}")
+        except Exception as e:
+            print(f"Error setting server config: {e}")
         
         return [
             mlflow_path,
