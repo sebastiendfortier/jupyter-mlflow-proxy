@@ -28,5 +28,7 @@ def setup_mlflow():
         'launcher_entry': {
             'title': 'MLflow',
             'icon_path': get_icon_path()
-        }
+        },
+        'timeout': 90,           # Timeout in seconds
+        'new_browser_tab': True  # Opens in a new tab
     } 

@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="jupyter-mlflow-proxy",
-    version='1.0.1',
+    version='1.0.2',
     url="https://github.com/sebastiendfortier/jupyter-mlflow-proxy",
     author="Original: Ryan Lovett & Yuvi Panda",
     description="Jupyter extension to proxy MLflow",
