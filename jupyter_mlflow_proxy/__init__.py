@@ -1,6 +1,6 @@
-from IPython.display import display, Javascript
 import os
 import shutil
+from jupyter_server.serverapp import ServerApp
 
 def get_icon_path():
     """Get the path to the MLflow icon"""
@@ -20,6 +20,17 @@ def setup_mlflow():
         message = f"MLflow server running on http://localhost:{port}"
         print(message)
         
+        # Set environment variable for JupyterLab
+        os.environ['MLFLOW_SERVER_URL'] = f"http://localhost:{port}"
+        
+        # If running in a Jupyter context, set server config
+        try:
+            server_app = ServerApp.instance()
+            if server_app:
+                server_app.config.MLflowServerURL = f"http://localhost:{port}"
+        except:
+            pass
+        
         return [
             mlflow_path,
             'ui',
@@ -32,8 +43,7 @@ def setup_mlflow():
         'absolute_url': False,
         'launcher_entry': {
             'title': 'MLflow',
-            'icon_path': get_icon_path(),
-            'notification': 'MLflow server is starting...'
+            'icon_path': get_icon_path()
         },
         'timeout': 90,           # Timeout in seconds
         'new_browser_tab': True  # Opens in a new tab
