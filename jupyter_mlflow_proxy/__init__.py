@@ -1,6 +1,7 @@
 import os
 import shutil
-from jupyter_server.serverapp import ServerApp
+import sqlite3
+from pathlib import Path
 from traitlets import Unicode
 from traitlets.config import LoggingConfigurable
 
@@ -13,9 +14,43 @@ def get_icon_path():
         os.path.dirname(os.path.abspath(__file__)), 'icons', 'mlflow.svg'
     )
 
+def init_db():
+    """Initialize SQLite database"""
+    db_path = os.path.join(str(Path.home()), '.jupyter_mlflow.db')
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS mlflow_config
+                 (key TEXT PRIMARY KEY, value TEXT)''')
+    conn.commit()
+    conn.close()
+    return db_path
+
+def store_mlflow_url(url):
+    """Store MLflow URL in SQLite database"""
+    db_path = os.path.join(str(Path.home()), '.jupyter_mlflow.db')
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+    c.execute('INSERT OR REPLACE INTO mlflow_config (key, value) VALUES (?, ?)',
+              ('server_url', url))
+    conn.commit()
+    conn.close()
+
+def get_mlflow_url():
+    """Get MLflow URL from SQLite database"""
+    db_path = os.path.join(str(Path.home()), '.jupyter_mlflow.db')
+    if not os.path.exists(db_path):
+        return None
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+    c.execute('SELECT value FROM mlflow_config WHERE key = ?', ('server_url',))
+    result = c.fetchone()
+    conn.close()
+    return result[0] if result else None
+
 def setup_mlflow():
     """Set up and return MLflow UI process configuration"""
-    mlflow_config = MLflowConfig()
+    # Initialize the database
+    init_db()
     
     def _get_cmd(port):
         """Get the MLflow UI command"""
@@ -28,19 +63,8 @@ def setup_mlflow():
         message = f"MLflow server running on {server_url}"
         print(message)
         
-        # Store URL in multiple places for accessibility
-        os.environ['MLFLOW_SERVER_URL'] = server_url
-        mlflow_config.server_url = server_url
-        
-        # If running in a Jupyter context, set server config
-        try:
-            server_app = ServerApp.instance()
-            if server_app:
-                server_app.config.MLflowConfig.server_url = server_url
-                print(f"Server app config: {server_app.config}")
-                print(f"Config location: {server_app.config_file_paths}")
-        except Exception as e:
-            print(f"Error setting server config: {e}")
+        # Store URL in SQLite database
+        store_mlflow_url(server_url)
         
         return [
             mlflow_path,
